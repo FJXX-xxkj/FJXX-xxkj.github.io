@@ -1,42 +1,76 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>正在跳转...</title>
-
-  <!-- 方式 1：Meta 刷新（0 秒无缝跳转，兼容无 JS 环境） -->
-  <meta http-equiv="refresh" content="0; url=https://availability-pickup-rip-paradise.trycloudflare.com">
-
-  <script>
-    // 方式 2：JS 强制跳转（replace 不会把跳转页压入历史记录，避免后退死循环）
-    window.location.replace("https://availability-pickup-rip-paradise.trycloudflare.com");
-  </script>
-
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      margin: 0;
-      color: #555;
-      background-color: #fafafa;
-    }
-    a {
-      color: #0066cc;
-      text-decoration: none;
-      margin-top: 8px;
-    }
-    a:hover {
-      text-decoration: underline;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>正在进入 · 枫泾小学信息小助手</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif;
+       background:linear-gradient(160deg,#eef4ff,#f7f9fc 45%,#eef7f1);color:#334}
+  .card{background:#fff;border-radius:18px;box-shadow:0 10px 30px rgba(31,56,102,.12);
+        padding:34px 28px;max-width:420px;width:calc(100% - 32px);text-align:center}
+  .ring{width:44px;height:44px;margin:0 auto 16px;border:4px solid #dbe6f5;border-top-color:#3b7ddd;
+        border-radius:50%;animation:spin 1s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  h1{font-size:17px;margin:0 0 10px;color:#22304a}
+  p{margin:6px 0;font-size:14px;line-height:1.7;color:#667}
+  a{color:#3b7ddd;text-decoration:none}
+  a:hover{text-decoration:underline}
+  .small{font-size:12px;color:#98a}
+  .err .ring{animation:none;border-color:#f3cece;border-top-color:#e05252}
+</style>
 </head>
 <body>
-  <p>页面正在跳转中，请稍候...</p>
-  <p>如果没有自动跳转，请<a href="https://availability-pickup-rip-paradise.trycloudflare.com">点击这里</a>。</p>
+<div class="card" id="card">
+  <div class="ring"></div>
+  <h1>枫泾小学信息小助手</h1>
+  <p id="msg">正在连接服务器，请稍候…</p>
+  <p class="small"><a id="manual" href="#">如果长时间没有反应，请点此手动进入</a></p>
+  <p class="small">枫泾小学信息组出品</p>
+</div>
+<script>
+(function () {
+  var FALLBACK = "https://availability-pickup-rip-paradise.trycloudflare.com";
+  var card = document.getElementById('card');
+  var msg = document.getElementById('msg');
+  var manual = document.getElementById('manual');
+  var done = false;
+
+  manual.href = FALLBACK;
+
+  function enter(u) {
+    if (done) return;
+    done = true;
+    manual.href = u;
+    window.location.replace(u);
+  }
+
+  function fail() {
+    card.className = 'card err';
+    msg.textContent = '暂时拿不到最新服务器地址，正在尝试上一次可用的地址…';
+    manual.href = FALLBACK;
+    setTimeout(function () { enter(FALLBACK); }, 2500);
+  }
+
+  var ctrl = ('AbortController' in window) ? new AbortController() : null;
+  var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, 8000);
+
+  fetch('tunnel.json?t=' + Date.now(), { cache: 'no-store', signal: ctrl ? ctrl.signal : undefined })
+    .then(function (r) { if (!r.ok) throw new Error('bad status'); return r.json(); })
+    .then(function (d) {
+      clearTimeout(timer);
+      var u = (d && d.url) ? String(d.url) : '';
+      if (/^https:\/\/[a-z0-9-]+\.trycloudflare\.com/i.test(u)) {
+        enter(u);
+      } else {
+        fail();
+      }
+    })
+    .catch(function () { clearTimeout(timer); fail(); });
+})();
+</script>
 </body>
 </html>
