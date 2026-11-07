@@ -1,0 +1,1145 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>复古未来主义电报机 · 3D 互动模型</title>
+  <style>
+    :root {
+      --ink: #162235;
+      --muted: #637184;
+      --line: rgba(35, 52, 73, 0.14);
+      --cyan: #4fc3f7;
+      --paper: rgba(248, 251, 253, 0.86);
+    }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    body {
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 48% 36%, #ffffff 0, #f3f6f8 34%, #dfe6eb 72%, #cfd8df 100%);
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+      -webkit-font-smoothing: antialiased;
+      user-select: none;
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(rgba(26, 42, 60, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(26, 42, 60, 0.025) 1px, transparent 1px);
+      background-size: 32px 32px;
+      mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.55), transparent 72%);
+    }
+
+    #scene {
+      position: fixed;
+      inset: 0;
+    }
+
+    #scene canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      outline: none;
+      touch-action: none;
+    }
+
+    .masthead {
+      position: fixed;
+      top: 24px;
+      left: 28px;
+      display: flex;
+      align-items: flex-start;
+      gap: 15px;
+      pointer-events: none;
+    }
+
+    .index {
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      margin-top: 2px;
+      border: 1px solid rgba(22, 34, 53, 0.3);
+      border-radius: 50%;
+      color: #2d3d51;
+      font: 700 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+      letter-spacing: 0.08em;
+    }
+
+    .eyebrow {
+      margin: 0 0 5px;
+      color: #627083;
+      font: 700 10px/1.3 ui-monospace, SFMono-Regular, Menlo, monospace;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(18px, 2vw, 27px);
+      font-weight: 700;
+      line-height: 1.12;
+      letter-spacing: 0.01em;
+    }
+
+    .spec {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.02em;
+    }
+
+    .readout {
+      position: fixed;
+      left: 28px;
+      bottom: 26px;
+      width: min(520px, calc(100vw - 56px));
+      padding: 17px 19px 16px;
+      border: 1px solid rgba(28, 48, 69, 0.16);
+      border-radius: 18px;
+      background: var(--paper);
+      box-shadow:
+        0 22px 60px rgba(29, 46, 67, 0.13),
+        inset 0 1px rgba(255, 255, 255, 0.86);
+      backdrop-filter: blur(18px) saturate(125%);
+    }
+
+    .readout-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 8px;
+    }
+
+    .readout-label {
+      color: var(--muted);
+      font: 700 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    #statusText {
+      color: #2f5f78;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    #signalText {
+      min-height: 39px;
+      overflow: hidden;
+      color: #101f31;
+      font: 700 clamp(25px, 3.4vw, 38px)/1.15 Georgia, "Times New Roman", serif;
+      letter-spacing: 0.18em;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .key-guide {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-top: 9px;
+      padding-top: 11px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .key-guide span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .key-guide kbd {
+      display: inline-grid;
+      place-items: center;
+      min-width: 22px;
+      height: 21px;
+      padding: 0 6px;
+      border: 1px solid rgba(25, 42, 61, 0.2);
+      border-bottom-width: 2px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.82);
+      color: #1d3047;
+      font: 700 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    .drag-hint {
+      position: fixed;
+      right: 26px;
+      bottom: 28px;
+      color: #617084;
+      font-size: 11px;
+      line-height: 1.7;
+      text-align: right;
+      pointer-events: none;
+    }
+
+    .drag-hint b {
+      color: #33465d;
+      font-weight: 600;
+    }
+
+    #loading {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      z-index: 20;
+      background: #e8edf1;
+      color: #586a7d;
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      transition: opacity 350ms ease, visibility 350ms ease;
+    }
+
+    #loading.hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    #loading.error {
+      color: #8b2e35;
+      white-space: pre-wrap;
+      text-align: center;
+      padding: 30px;
+      line-height: 1.8;
+    }
+
+    @media (max-width: 720px) {
+      .masthead {
+        top: 16px;
+        left: 16px;
+      }
+
+      .spec,
+      .drag-hint {
+        display: none;
+      }
+
+      .readout {
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
+        width: auto;
+        padding: 14px 15px;
+      }
+
+      .key-guide {
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+    }
+  </style>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <main id="scene" aria-label="可旋转缩放的三维电报机模型"></main>
+
+  <header class="masthead">
+    <div class="index">01</div>
+    <div>
+      <p class="eyebrow">Futuristic Telegraph · Industrial Study</p>
+      <h1>复古未来主义电报机</h1>
+      <div class="spec">250 × 180 × 80 mm · 翻盖式教学模型</div>
+    </div>
+  </header>
+
+  <section class="readout" aria-live="polite">
+    <div class="readout-head">
+      <span class="readout-label">Signal / 信号序列</span>
+      <span id="statusText">待发报</span>
+    </div>
+    <div id="signalText">—</div>
+    <div class="key-guide">
+      <span><kbd>0</kbd> 短按发送点 <b>·</b></span>
+      <span><kbd>0</kbd> 长按发送划 <b>−</b></span>
+      <span>拖动旋转 · 滚轮缩放</span>
+    </div>
+  </section>
+
+  <div class="drag-hint">
+    <b>Orbit view</b><br>
+    20–80 cm · 俯视不超过 80°
+  </div>
+
+  <div id="loading">正在初始化三维电报机…</div>
+
+  <script type="module">
+    import * as THREE from "three";
+    import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+    import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
+    import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+
+    const loading = document.querySelector("#loading");
+    const signalText = document.querySelector("#signalText");
+    const statusText = document.querySelector("#statusText");
+    const sceneHost = document.querySelector("#scene");
+
+    try {
+      // -----------------------------------------------------------------------
+      // 场景初始化
+      // -----------------------------------------------------------------------
+      const renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        alpha: true,
+        powerPreference: "high-performance",
+      });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.08;
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      sceneHost.appendChild(renderer.domElement);
+
+      const scene = new THREE.Scene();
+      scene.fog = new THREE.Fog(0xdde6ec, 96, 168);
+
+      const camera = new THREE.PerspectiveCamera(
+        36,
+        window.innerWidth / window.innerHeight,
+        0.5,
+        220
+      );
+      camera.position.set(34, 27, 48);
+
+      const controls = new OrbitControls(camera, renderer.domElement);
+      controls.target.set(0, 9.2, -0.2);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.065;
+      controls.rotateSpeed = 0.65;
+      controls.zoomSpeed = 0.75;
+      controls.minDistance = 20;
+      controls.maxDistance = 80;
+      controls.minPolarAngle = THREE.MathUtils.degToRad(18);
+      controls.maxPolarAngle = THREE.MathUtils.degToRad(80);
+      controls.addEventListener("start", () => {
+        renderer.domElement.style.cursor = "grabbing";
+      });
+      controls.addEventListener("end", () => {
+        renderer.domElement.style.cursor = "grab";
+      });
+      renderer.domElement.style.cursor = "grab";
+
+      const pmrem = new THREE.PMREMGenerator(renderer);
+      const roomEnvironment = new RoomEnvironment();
+      scene.environment = pmrem.fromScene(roomEnvironment, 0.04).texture;
+      roomEnvironment.dispose();
+      pmrem.dispose();
+
+      const clock = new THREE.Clock();
+      const device = new THREE.Group();
+      scene.add(device);
+
+      const C = {
+        shell: 0xc8cdd3,
+        shellLight: 0xdce1e5,
+        shellDark: 0x959da6,
+        charcoal: 0x3a3f47,
+        frame: 0x22262c,
+        screen: 0x4fc3f7,
+        lamp: 0x72dff8,
+      };
+
+      const materials = {
+        shell: new THREE.MeshStandardMaterial({
+          color: C.shell,
+          metalness: 0.3,
+          roughness: 0.5,
+        }),
+        shellLight: new THREE.MeshStandardMaterial({
+          color: C.shellLight,
+          metalness: 0.24,
+          roughness: 0.46,
+        }),
+        shellDark: new THREE.MeshStandardMaterial({
+          color: C.shellDark,
+          metalness: 0.42,
+          roughness: 0.42,
+        }),
+        charcoal: new THREE.MeshStandardMaterial({
+          color: C.charcoal,
+          metalness: 0.1,
+          roughness: 0.72,
+        }),
+        dark: new THREE.MeshStandardMaterial({
+          color: C.frame,
+          metalness: 0.18,
+          roughness: 0.62,
+        }),
+        metal: new THREE.MeshStandardMaterial({
+          color: 0xd8dde0,
+          metalness: 0.9,
+          roughness: 0.25,
+        }),
+        metalDark: new THREE.MeshStandardMaterial({
+          color: 0x7c858f,
+          metalness: 0.82,
+          roughness: 0.31,
+        }),
+        cyan: new THREE.MeshStandardMaterial({
+          color: 0x8ee9ff,
+          emissive: 0x209ac8,
+          emissiveIntensity: 2.8,
+          metalness: 0.05,
+          roughness: 0.28,
+        }),
+        lampOn: new THREE.MeshStandardMaterial({
+          color: C.lamp,
+          emissive: C.screen,
+          emissiveIntensity: 3.4,
+          roughness: 0.25,
+        }),
+        lampOff: new THREE.MeshStandardMaterial({
+          color: 0x6d747d,
+          emissive: 0x000000,
+          emissiveIntensity: 0,
+          roughness: 0.45,
+        }),
+      };
+
+      function roundedBox(width, height, depth, radius, material) {
+        const geometry = new RoundedBoxGeometry(width, height, depth, 4, radius);
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        return mesh;
+      }
+
+      function cylinder(radiusTop, radiusBottom, height, segments, material) {
+        const mesh = new THREE.Mesh(
+          new THREE.CylinderGeometry(radiusTop, radiusBottom, height, segments),
+          material
+        );
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        return mesh;
+      }
+
+      function place(mesh, x, y, z, parent = device) {
+        mesh.position.set(x, y, z);
+        parent.add(mesh);
+        return mesh;
+      }
+
+      function createRodBetween(start, end, radius, material, parent = device) {
+        const direction = new THREE.Vector3().subVectors(end, start);
+        const length = direction.length();
+        const rod = cylinder(radius, radius, length, 16, material);
+        rod.position.copy(start).add(end).multiplyScalar(0.5);
+        rod.quaternion.setFromUnitVectors(
+          new THREE.Vector3(0, 1, 0),
+          direction.clone().normalize()
+        );
+        parent.add(rod);
+        return rod;
+      }
+
+      function canvasTexture(canvas) {
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.colorSpace = THREE.SRGBColorSpace;
+        texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+        return texture;
+      }
+
+      // -----------------------------------------------------------------------
+      // 箱体建模
+      // -----------------------------------------------------------------------
+      const base = place(
+        roundedBox(25, 8, 18, 1.05, materials.shell),
+        0,
+        4,
+        0
+      );
+      base.name = "telegraph-base";
+
+      place(roundedBox(24.9, 0.72, 18.15, 0.34, materials.shellDark), 0, 0.62, 0);
+      place(roundedBox(24.25, 0.35, 17.25, 0.42, materials.metalDark), 0, 7.98, 0);
+      place(roundedBox(23.72, 0.18, 16.68, 0.34, materials.charcoal), 0, 8.2, 0);
+
+      // 顶面细窄装饰线与四角加固包边
+      place(roundedBox(23.9, 0.09, 0.28, 0.06, materials.metal), 0, 8.31, -8.02);
+      place(roundedBox(23.9, 0.09, 0.28, 0.06, materials.metal), 0, 8.31, 8.02);
+      [-11.95, 11.95].forEach((x) => {
+        place(roundedBox(0.34, 6.55, 0.34, 0.1, materials.shellDark), x, 4.1, 8.78);
+        place(roundedBox(0.34, 6.55, 0.34, 0.1, materials.shellDark), x, 4.1, -8.78);
+      });
+
+      // 正面凹槽提手
+      place(roundedBox(10.2, 3.05, 0.72, 0.48, materials.dark), 0, 1.75, 9.02);
+      place(roundedBox(8.25, 1.62, 0.56, 0.32, materials.shellDark), 0, 1.76, 9.35);
+      const handle = cylinder(0.34, 0.34, 7.1, 24, materials.metal);
+      handle.rotation.z = Math.PI / 2;
+      place(handle, 0, 1.78, 9.67);
+
+      // 青色前沿灯条
+      place(roundedBox(8.8, 0.46, 0.13, 0.11, materials.cyan), 0, 4.55, 9.08);
+      place(roundedBox(9.45, 0.17, 0.09, 0.04, materials.dark), 0, 4.55, 9.045);
+
+      // -----------------------------------------------------------------------
+      // 上盖与屏幕
+      // -----------------------------------------------------------------------
+      const lidGroup = new THREE.Group();
+      lidGroup.position.set(0, 8, -9);
+      lidGroup.rotation.x = THREE.MathUtils.degToRad(-100);
+      device.add(lidGroup);
+
+      const lidShell = place(
+        roundedBox(25, 5.5, 18, 1.02, materials.shell),
+        0,
+        2.75,
+        9,
+        lidGroup
+      );
+      lidShell.name = "telegraph-lid";
+
+      place(roundedBox(24.5, 0.42, 17.5, 0.32, materials.shellDark), 0, 0.08, 9, lidGroup);
+      place(roundedBox(23.1, 0.28, 16.3, 0.48, materials.frame), 0, -0.19, 9, lidGroup);
+      place(roundedBox(21.75, 0.12, 14.38, 0.26, materials.dark), 0, -0.37, 9, lidGroup);
+
+      const hinge = cylinder(0.62, 0.62, 21.9, 24, materials.metalDark);
+      hinge.rotation.z = Math.PI / 2;
+      hinge.position.set(0, 0, 0);
+      lidGroup.add(hinge);
+
+      const screenCanvas = document.createElement("canvas");
+      screenCanvas.width = 1024;
+      screenCanvas.height = 640;
+      const screenContext = screenCanvas.getContext("2d");
+      const screenTexture = canvasTexture(screenCanvas);
+      const screenMaterial = new THREE.MeshBasicMaterial({
+        map: screenTexture,
+        toneMapped: false,
+      });
+      const screen = new THREE.Mesh(new THREE.PlaneGeometry(20.9, 13.45), screenMaterial);
+      screen.rotation.x = Math.PI / 2;
+      screen.position.set(0, -0.445, 9);
+      lidGroup.add(screen);
+
+      const screenGlass = new THREE.Mesh(
+        new THREE.PlaneGeometry(21.3, 13.85),
+        new THREE.MeshPhysicalMaterial({
+          color: 0xffffff,
+          roughness: 0.13,
+          metalness: 0,
+          transparent: true,
+          opacity: 0.08,
+          clearcoat: 1,
+          clearcoatRoughness: 0.1,
+          side: THREE.DoubleSide,
+          depthWrite: false,
+        })
+      );
+      screenGlass.rotation.x = Math.PI / 2;
+      screenGlass.position.set(0, -0.47, 9);
+      lidGroup.add(screenGlass);
+
+      const glowCanvas = document.createElement("canvas");
+      glowCanvas.width = 256;
+      glowCanvas.height = 256;
+      const glowContext = glowCanvas.getContext("2d");
+      const glowGradient = glowContext.createRadialGradient(128, 128, 0, 128, 128, 128);
+      glowGradient.addColorStop(0, "rgba(79,195,247,0.84)");
+      glowGradient.addColorStop(0.42, "rgba(79,195,247,0.26)");
+      glowGradient.addColorStop(1, "rgba(79,195,247,0)");
+      glowContext.fillStyle = glowGradient;
+      glowContext.fillRect(0, 0, 256, 256);
+      const glow = new THREE.Sprite(
+        new THREE.SpriteMaterial({
+          map: canvasTexture(glowCanvas),
+          color: C.screen,
+          transparent: true,
+          opacity: 0.17,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false,
+        })
+      );
+      glow.scale.set(30, 24, 1);
+      glow.position.set(0, -1.1, 9);
+      lidGroup.add(glow);
+
+      const screenLight = new THREE.PointLight(C.screen, 21, 22, 2);
+      screenLight.position.set(0, -2.1, 9);
+      lidGroup.add(screenLight);
+
+      [-11.55, 11.55].forEach((x) => {
+        place(roundedBox(0.56, 5.1, 15.7, 0.28, materials.shellDark), x, 2.62, 9, lidGroup);
+        place(roundedBox(0.92, 0.62, 1.05, 0.18, materials.metalDark), x, 0.16, 16.5, lidGroup);
+      });
+
+      // 左右支撑杆
+      createRodBetween(
+        new THREE.Vector3(-11.55, 8.15, -7.2),
+        new THREE.Vector3(-11.8, 15.7, -11.8),
+        0.27,
+        materials.metal
+      );
+      createRodBetween(
+        new THREE.Vector3(11.55, 8.15, -7.2),
+        new THREE.Vector3(11.8, 15.7, -11.8),
+        0.27,
+        materials.metal
+      );
+
+      // -----------------------------------------------------------------------
+      // 按钮与电键
+      // -----------------------------------------------------------------------
+      const interactive = [];
+      const buttonCaps = new Map();
+      const buttonVisual = new Map([
+        ["clear", 0],
+        ["send", 0],
+      ]);
+
+      function createButtonLabels(zh, en) {
+        const canvas = document.createElement("canvas");
+        canvas.width = 640;
+        canvas.height = 560;
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = "#f5f7f8";
+        ctx.shadowColor = "rgba(0,0,0,0.38)";
+        ctx.shadowBlur = 10;
+        ctx.shadowOffsetY = 5;
+        ctx.font = '700 116px "PingFang SC","Microsoft YaHei",sans-serif';
+        ctx.fillText(zh, 320, 214);
+        ctx.shadowBlur = 4;
+        ctx.fillStyle = "#d6dde2";
+        ctx.font = '600 60px ui-monospace, SFMono-Regular, Menlo, monospace';
+        ctx.fillText(en, 320, 350);
+        ctx.fillStyle = "rgba(255,255,255,0.16)";
+        ctx.fillRect(204, 410, 232, 3);
+        return canvasTexture(canvas);
+      }
+
+      function createButton({ x, z, zh, en, action }) {
+        const group = new THREE.Group();
+        group.position.set(x, 8.43, z);
+        device.add(group);
+
+        const frame = roundedBox(7.05, 0.34, 6.45, 0.56, materials.shellDark);
+        frame.position.y = -0.1;
+        group.add(frame);
+
+        const cap = roundedBox(6.28, 0.76, 5.72, 0.55, materials.charcoal);
+        cap.position.y = 0.18;
+        group.add(cap);
+
+        const labelTexture = createButtonLabels(zh, en);
+        const label = new THREE.Mesh(
+          new THREE.PlaneGeometry(5.36, 4.7),
+          new THREE.MeshBasicMaterial({
+            map: labelTexture,
+            transparent: true,
+            depthWrite: false,
+            toneMapped: false,
+          })
+        );
+        label.rotation.x = -Math.PI / 2;
+        label.position.set(0, 0.575, 0);
+        group.add(label);
+
+        cap.userData.action = action;
+        label.userData.action = action;
+        interactive.push(cap, label);
+        buttonCaps.set(action, { cap, label, baseY: cap.position.y });
+        return group;
+      }
+
+      createButton({
+        x: -7.1,
+        z: -2.55,
+        zh: "清除",
+        en: "CLEAR",
+        action: "clear",
+      });
+      createButton({
+        x: -4.35,
+        z: 3.65,
+        zh: "发送",
+        en: "SEND",
+        action: "send",
+      });
+
+      const keyDeck = roundedBox(7.75, 0.38, 9.75, 0.8, materials.charcoal);
+      place(keyDeck, 7.15, 8.36, -1.3);
+
+      const keySeat = cylinder(3.25, 3.42, 0.46, 64, materials.metalDark);
+      place(keySeat, 7.1, 8.68, -3.5);
+
+      const keyPivot = new THREE.Group();
+      keyPivot.position.set(7.05, 9.11, -5.05);
+      keyPivot.rotation.x = -0.025;
+      device.add(keyPivot);
+
+      const pivotBarrel = cylinder(0.62, 0.62, 3.25, 30, materials.metal);
+      pivotBarrel.rotation.z = Math.PI / 2;
+      keyPivot.add(pivotBarrel);
+
+      const lever = roundedBox(1.18, 0.4, 5.95, 0.18, materials.metal);
+      lever.position.set(0, 0.34, 2.7);
+      keyPivot.add(lever);
+
+      const leverNeck = roundedBox(0.76, 0.7, 1.04, 0.28, materials.metalDark);
+      leverNeck.position.set(0, 0.78, 4.66);
+      keyPivot.add(leverNeck);
+
+      const knob = cylinder(1.12, 1.12, 0.72, 40, materials.charcoal);
+      knob.position.set(0, 1.27, 5.36);
+      keyPivot.add(knob);
+
+      const knobTop = cylinder(0.75, 0.75, 0.12, 32, materials.metalDark);
+      knobTop.position.set(0, 1.69, 5.36);
+      keyPivot.add(knobTop);
+
+      // 弹簧线圈
+      const springPoints = [];
+      for (let i = 0; i <= 92; i += 1) {
+        const t = i / 92;
+        const angle = t * Math.PI * 9;
+        springPoints.push(
+          new THREE.Vector3(
+            Math.cos(angle) * 0.63,
+            0.73 + t * 1.12,
+            -1.12 + Math.sin(angle) * 0.63
+          )
+        );
+      }
+      const springCurve = new THREE.CatmullRomCurve3(springPoints);
+      const spring = new THREE.Mesh(
+        new THREE.TubeGeometry(springCurve, 180, 0.075, 8, false),
+        materials.metal
+      );
+      spring.castShadow = true;
+      keyPivot.add(spring);
+
+      const contactBlock = roundedBox(1.28, 0.48, 0.74, 0.18, materials.charcoal);
+      contactBlock.position.set(7.08, 8.77, -0.94);
+      device.add(contactBlock);
+      const contactDot = cylinder(0.38, 0.38, 0.16, 24, materials.metal);
+      contactDot.position.set(7.08, 9.05, -0.94);
+      device.add(contactDot);
+
+      [pivotBarrel, lever, leverNeck, knob, knobTop, spring].forEach((part) => {
+        part.userData.action = "key";
+        interactive.push(part);
+      });
+
+      const lampMaterialA = materials.lampOn.clone();
+      const lampMaterialB = materials.lampOn.clone();
+      const lampMaterialC = materials.lampOff.clone();
+      const statusLamps = [
+        {
+          mesh: place(new THREE.Mesh(new THREE.SphereGeometry(0.42, 20, 20), lampMaterialA), 7.1, 8.72, 2.15),
+          material: lampMaterialA,
+        },
+        {
+          mesh: place(new THREE.Mesh(new THREE.SphereGeometry(0.42, 20, 20), lampMaterialB), 8.15, 8.72, 2.15),
+          material: lampMaterialB,
+        },
+        {
+          mesh: place(new THREE.Mesh(new THREE.SphereGeometry(0.42, 20, 20), lampMaterialC), 9.2, 8.72, 2.15),
+          material: lampMaterialC,
+        },
+      ];
+      statusLamps.forEach((lamp) => {
+        lamp.mesh.material = lamp.material;
+      });
+
+      // -----------------------------------------------------------------------
+      // 灯光
+      // -----------------------------------------------------------------------
+      scene.add(new THREE.HemisphereLight(0xeaf6ff, 0x707983, 1.45));
+      scene.add(new THREE.AmbientLight(0xc5d6e4, 0.56));
+
+      const keyLight = new THREE.DirectionalLight(0xfff2dd, 3.7);
+      keyLight.position.set(-34, 52, 32);
+      keyLight.castShadow = true;
+      keyLight.shadow.mapSize.set(2048, 2048);
+      keyLight.shadow.camera.near = 5;
+      keyLight.shadow.camera.far = 125;
+      keyLight.shadow.camera.left = -38;
+      keyLight.shadow.camera.right = 38;
+      keyLight.shadow.camera.top = 38;
+      keyLight.shadow.camera.bottom = -38;
+      keyLight.shadow.bias = -0.00025;
+      keyLight.shadow.normalBias = 0.025;
+      scene.add(keyLight);
+
+      const fillLight = new THREE.DirectionalLight(0xa9d6ff, 1.85);
+      fillLight.position.set(38, 22, -30);
+      scene.add(fillLight);
+
+      const rimLight = new THREE.DirectionalLight(0xdff7ff, 1.18);
+      rimLight.position.set(-6, 20, -38);
+      scene.add(rimLight);
+
+      const ground = new THREE.Mesh(
+        new THREE.PlaneGeometry(180, 180),
+        new THREE.ShadowMaterial({ color: 0x314254, opacity: 0.2 })
+      );
+      ground.rotation.x = -Math.PI / 2;
+      ground.position.y = -0.04;
+      ground.receiveShadow = true;
+      scene.add(ground);
+
+      // -----------------------------------------------------------------------
+      // 屏幕绘制与交互状态
+      // -----------------------------------------------------------------------
+      const signals = [];
+      const MAX_SIGNALS = 22;
+      let keyHeld = false;
+      let pressStartedAt = 0;
+      let sendFlashUntil = 0;
+      let clearFlashUntil = 0;
+      let keyPulseUntil = 0;
+      let lastScreenDraw = 0;
+      let pointerAction = null;
+
+      function signalString() {
+        return signals.length
+          ? signals.map((signal) => (signal === "dot" ? "·" : "−")).join(" ")
+          : "—";
+      }
+
+      function updateReadout(message) {
+        signalText.textContent = signalString();
+        if (message) {
+          statusText.textContent = message;
+          return;
+        }
+        if (keyHeld) {
+          statusText.textContent = "发报中";
+        } else if (signals.length) {
+          statusText.textContent = `已记录 ${signals.length} 个信号`;
+        } else {
+          statusText.textContent = "待发报";
+        }
+      }
+
+      function drawScreen(now) {
+        const width = screenCanvas.width;
+        const height = screenCanvas.height;
+        const ctx = screenContext;
+        const sending = now < sendFlashUntil;
+        const clearing = now < clearFlashUntil;
+
+        const background = ctx.createLinearGradient(0, 0, width, height);
+        background.addColorStop(0, "#081423");
+        background.addColorStop(0.56, "#0a1628");
+        background.addColorStop(1, "#07111e");
+        ctx.fillStyle = background;
+        ctx.fillRect(0, 0, width, height);
+
+        // 细网格与内发光
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = "rgba(79,195,247,0.075)";
+        for (let x = 0; x <= width; x += 48) {
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, height);
+          ctx.stroke();
+        }
+        for (let y = 0; y <= height; y += 48) {
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(width, y);
+          ctx.stroke();
+        }
+
+        const vignette = ctx.createRadialGradient(
+          width / 2,
+          height / 2,
+          80,
+          width / 2,
+          height / 2,
+          650
+        );
+        vignette.addColorStop(0, "rgba(79,195,247,0.08)");
+        vignette.addColorStop(1, "rgba(0,0,0,0.38)");
+        ctx.fillStyle = vignette;
+        ctx.fillRect(0, 0, width, height);
+
+        // 顶部标识与状态点
+        ctx.textAlign = "left";
+        ctx.textBaseline = "alphabetic";
+        ctx.fillStyle = "rgba(201,223,238,0.72)";
+        ctx.font = "600 24px ui-monospace, SFMono-Regular, Menlo, monospace";
+        ctx.fillText("FJXX · FUTURISTIC TELEGRAPH", 44, 54);
+        ctx.fillStyle = sending ? "#ffe5a6" : "#7edcf7";
+        ctx.beginPath();
+        ctx.arc(width - 54, 45, 9, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 动态波形
+        const phase = now * 0.0018;
+        const amplitude = sending ? 66 : keyHeld ? 52 : 34;
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(40, 120, width - 80, 250);
+        ctx.clip();
+        ctx.lineWidth = 3;
+        ctx.shadowColor = "#4fc3f7";
+        ctx.shadowBlur = 16;
+        ctx.strokeStyle = sending ? "#bcefff" : "#4fc3f7";
+        ctx.beginPath();
+        for (let x = 40; x <= width - 40; x += 3) {
+          const t = (x - 40) / (width - 80);
+          const carrier = Math.sin(t * 74 + phase * 2.4) * 8;
+          const envelope =
+            Math.pow(Math.sin(t * Math.PI), 0.52) *
+            (0.35 + 0.65 * Math.abs(Math.sin(t * 10.5 + phase * 0.8)));
+          const slow = Math.sin(t * 27 + phase) * amplitude * 0.22;
+          const spike = Math.exp(-Math.pow((t - 0.53) * 18, 2)) * 68;
+          const y = height * 0.37 + carrier + slow * envelope + spike;
+          if (x === 40) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+        ctx.restore();
+
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = "#f1f7fb";
+        ctx.font = "500 28px ui-monospace, SFMono-Regular, Menlo, monospace";
+        ctx.fillText(sending ? "STATUS: TRANSMITTING" : "STATUS: READY", 46, 426);
+
+        // 状态灯
+        const lampAlpha = clearing && Math.floor(now / 110) % 2 === 0 ? 0.2 : 1;
+        [
+          [52, "#4fc3f7", lampAlpha],
+          [92, "#4fc3f7", lampAlpha],
+          [132, "#75808d", 0.8],
+        ].forEach(([x, color, alpha]) => {
+          ctx.globalAlpha = alpha;
+          ctx.fillStyle = color;
+          ctx.beginPath();
+          ctx.arc(x, 479, 9, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        ctx.globalAlpha = 1;
+
+        // 进度线
+        const progress = 0.18 + (Math.sin(phase * 0.65) + 1) * 0.22;
+        ctx.fillStyle = "rgba(125,151,174,0.28)";
+        ctx.fillRect(176, 474, 214, 10);
+        ctx.fillStyle = "#4fc3f7";
+        ctx.fillRect(176, 474, 214 * progress, 10);
+
+        // 信号序列
+        ctx.fillStyle = "rgba(153,177,197,0.82)";
+        ctx.font = "600 23px ui-monospace, SFMono-Regular, Menlo, monospace";
+        ctx.fillText("SIGNAL", 46, 555);
+        ctx.textAlign = "right";
+        ctx.fillText(`COUNT ${signals.length}`, width - 46, 555);
+        ctx.textAlign = "left";
+        const line = signalString();
+        ctx.fillStyle = "#f5fbff";
+        ctx.font = `700 ${line.length > 20 ? 48 : 68}px Georgia, "Times New Roman", serif`;
+        ctx.fillText(line, 46, 620);
+
+        if (sending) {
+          const flash = 0.08 + 0.06 * Math.sin(now * 0.03);
+          ctx.fillStyle = `rgba(181,238,255,${Math.max(0.035, flash)})`;
+          ctx.fillRect(0, 0, width, height);
+        }
+
+        if (clearing) {
+          ctx.fillStyle = "rgba(79,195,247,0.12)";
+          ctx.fillRect(0, 0, width, height);
+        }
+
+        screenTexture.needsUpdate = true;
+      }
+
+      function pressKey() {
+        if (keyHeld) return;
+        keyHeld = true;
+        pressStartedAt = performance.now();
+        updateReadout("发报中");
+      }
+
+      function releaseKey() {
+        if (!keyHeld) return;
+        keyHeld = false;
+        const duration = performance.now() - pressStartedAt;
+        signals.push(duration < 180 ? "dot" : "dash");
+        if (signals.length > MAX_SIGNALS) signals.shift();
+        updateReadout();
+      }
+
+      function triggerClear() {
+        signals.length = 0;
+        clearFlashUntil = performance.now() + 680;
+        buttonVisual.set("clear", 1);
+        updateReadout("信号已清除");
+        window.setTimeout(() => updateReadout(), 720);
+      }
+
+      function triggerSend() {
+        const now = performance.now();
+        sendFlashUntil = now + 900;
+        keyPulseUntil = now + 240;
+        buttonVisual.set("send", 1);
+        updateReadout("发送完成");
+        window.setTimeout(() => updateReadout(), 920);
+      }
+
+      const raycaster = new THREE.Raycaster();
+      const pointer = new THREE.Vector2();
+
+      function pointerActionAt(event) {
+        const rect = renderer.domElement.getBoundingClientRect();
+        pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+        raycaster.setFromCamera(pointer, camera);
+        const hit = raycaster.intersectObjects(interactive, false)[0];
+        if (!hit) return null;
+        let target = hit.object;
+        while (target && !target.userData.action) target = target.parent;
+        return target ? target.userData.action : null;
+      }
+
+      renderer.domElement.addEventListener("pointermove", (event) => {
+        if (pointerAction) return;
+        const action = pointerActionAt(event);
+        renderer.domElement.style.cursor = action ? "pointer" : "grab";
+      });
+
+      renderer.domElement.addEventListener("pointerdown", (event) => {
+        const action = pointerActionAt(event);
+        if (!action) return;
+        pointerAction = action;
+        controls.enabled = false;
+        renderer.domElement.setPointerCapture?.(event.pointerId);
+        if (action === "key") {
+          pressKey();
+        } else {
+          buttonVisual.set(action, 1);
+        }
+      });
+
+      window.addEventListener("pointerup", () => {
+        if (!pointerAction) return;
+        const action = pointerAction;
+        pointerAction = null;
+        controls.enabled = true;
+        if (action === "key") {
+          releaseKey();
+        } else if (action === "clear") {
+          triggerClear();
+        } else if (action === "send") {
+          triggerSend();
+        }
+      });
+
+      window.addEventListener("pointercancel", () => {
+        if (pointerAction === "key") releaseKey();
+        pointerAction = null;
+        controls.enabled = true;
+      });
+
+      window.addEventListener("keydown", (event) => {
+        if (event.key !== "0" && event.code !== "Digit0" && event.code !== "Numpad0") {
+          return;
+        }
+        event.preventDefault();
+        if (!event.repeat) pressKey();
+      });
+
+      window.addEventListener("keyup", (event) => {
+        if (event.key !== "0" && event.code !== "Digit0" && event.code !== "Numpad0") {
+          return;
+        }
+        event.preventDefault();
+        releaseKey();
+      });
+
+      function clearingPulse(now) {
+        if (now >= clearFlashUntil) return 1;
+        return Math.floor(now / 90) % 2 === 0 ? 0.15 : 1;
+      }
+
+      // -----------------------------------------------------------------------
+      // 动画循环
+      // -----------------------------------------------------------------------
+      function animate() {
+        requestAnimationFrame(animate);
+        const now = performance.now();
+        const delta = Math.min(clock.getDelta(), 0.05);
+
+        const keyTarget = keyHeld || now < keyPulseUntil ? 0.2 : -0.025;
+        keyPivot.rotation.x += (keyTarget - keyPivot.rotation.x) * Math.min(1, delta * 22);
+
+        buttonCaps.forEach(({ cap, label, baseY }, action) => {
+          const value = buttonVisual.get(action) * 0.2;
+          cap.position.y = baseY - value;
+          label.position.y = baseY + 0.395 - value;
+          buttonVisual.set(action, Math.max(0, buttonVisual.get(action) - delta * 4.2));
+        });
+
+        const pulse = clearingPulse(now);
+        lampMaterialA.emissiveIntensity = 3.4 * pulse;
+        lampMaterialB.emissiveIntensity = 3.4 * pulse;
+        glow.material.opacity = 0.15 + Math.sin(now * 0.0026) * 0.018;
+        screenLight.intensity = 19 + Math.sin(now * 0.0022) * 2.2;
+
+        if (now - lastScreenDraw > 30) {
+          lastScreenDraw = now;
+          drawScreen(now);
+        }
+
+        controls.update();
+        renderer.render(scene, camera);
+      }
+
+      window.addEventListener("resize", () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      });
+
+      updateReadout();
+      drawScreen(performance.now());
+      animate();
+      requestAnimationFrame(() => loading.classList.add("hidden"));
+    } catch (error) {
+      console.error(error);
+      loading.classList.add("error");
+      loading.textContent =
+        "电报机加载失败。\n请确认浏览器支持 WebGL，并可访问 Three.js CDN。\n\n" +
+        (error instanceof Error ? error.message : String(error));
+    }
+  </script>
+</body>
+</html>
